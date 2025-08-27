@@ -20,6 +20,7 @@
         <module>tour-agency-repo</module>
         <module>tour-agency-security</module>
         <module>tour-agency-web</module>
+        <module>tour-agency-service</module>
     </modules>
 
     <properties>
