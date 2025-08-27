@@ -1,0 +1,33 @@
+spring:
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: jdbc:postgresql://${JDBC_DB_HOST}/${JDBC_DB_NAME}
+    username: ${JDBC_USER}
+    password: ${JDBC_PASSWORD}
+    driverClassName: org.postgresql.Driver
+  sql:
+    init:
+      platform: postgres
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            authorization-grant-type: ${GOOGLE_AUTH_GRANT_TYPE:authorization_code}
+            redirect-uri: ${GOOGLE_REDIRECT_URL:http://localhost:8080/v1/info}
+        provider:
+          google:
+            token-uri: ${GOOGLE_TOKEN_URL:https://oauth2.googleapis.com/token}
+
+jwt:
+  secret: ${JWT_KEY}
+  expiration: ${JWT_EXPIRATION}
