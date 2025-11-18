@@ -1,0 +1,37 @@
+spring:
+  jpa:
+    database: MYSQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  datasource:
+    url: jdbc:mysql://${JDBC_DB_HOST}:${JDBC_DB_PORT}/${JDBC_DB_NAME}
+    password: ${JDBC_DB_PASSWORD}
+    username: ${JDBC_DB_USER}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      platform: mysql
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_SECRET}
+            authorization-grant-type: ${GOOGLE_AUTH_GRANT_TYPE}
+            redirect-uri: "http://localhost:8080/v1/auth/google/callback"
+        provider:
+          google:
+            token-uri: "https://oauth2.googleapis.com/token"
+
+jwt:
+  secret: ${JWT_SECRET}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
