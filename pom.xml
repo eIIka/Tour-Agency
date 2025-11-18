@@ -18,6 +18,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>tour-agency-common</module>
+        <module>tour-agency-repo</module>
     </modules>
 
     <properties>
