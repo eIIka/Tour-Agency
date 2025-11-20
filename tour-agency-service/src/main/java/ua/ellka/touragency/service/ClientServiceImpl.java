@@ -2,6 +2,7 @@ package ua.ellka.touragency.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ua.ellka.touragency.dto.ClientDTO;
 import ua.ellka.touragency.exception.ExistingServiceException;
@@ -74,7 +75,7 @@ public class ClientServiceImpl implements ClientService {
 
     //10
     @Override
-    //@PreAuthorize("@accessChecker.isClientOwner(#id)")
+    @PreAuthorize("@accessChecker.isClientOwner(#id) || hasRole('ROLE_ADMIN')")
     public ClientDTO updateClient(Long id, ClientDTO clientDTO) {
         Client updatedClient = clientRepo.findById(id)
                 .orElseThrow(() -> new NotFoundServiceException("Client not found"));
@@ -111,7 +112,7 @@ public class ClientServiceImpl implements ClientService {
 
     //11
     @Override
-    //@PreAuthorize("@accessChecker.isClientOwner(#id)")
+    @PreAuthorize("@accessChecker.isClientOwner(#id) || hasRole('ROLE_ADMIN')")
     public ClientDTO deleteClient(Long id) {
         Client existingClient = clientRepo.findById(id)
                 .orElseThrow(() -> new NotFoundServiceException("Client not found"));
