@@ -19,6 +19,7 @@
     <modules>
         <module>tour-agency-common</module>
         <module>tour-agency-repo</module>
+        <module>tour-agency-service</module>
     </modules>
 
     <properties>
@@ -33,6 +34,12 @@
             <dependency>
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct</artifactId>
+                <version>${org.mapstruct.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
                 <version>${org.mapstruct.version}</version>
                 <scope>provided</scope>
             </dependency>
