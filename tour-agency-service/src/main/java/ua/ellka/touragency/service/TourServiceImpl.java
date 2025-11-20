@@ -2,6 +2,7 @@ package ua.ellka.touragency.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ua.ellka.touragency.dto.TourDTO;
 import ua.ellka.touragency.exception.ExistingServiceException;
@@ -68,7 +69,7 @@ public class TourServiceImpl implements TourService {
 
     //3
     @Override
-    //@PreAuthorize("@accessChecker.isTourOwner(#id)")
+    @PreAuthorize("@accessChecker.isTourOwner(#id) || hasRole('ROLE_ADMIN')")
     public TourDTO updateTour(Long id, TourDTO tourDTO) {
         Tour updateTour = tourRepo.findById(id)
                 .orElseThrow(() -> new NotFoundServiceException("Tour not found"));
@@ -105,7 +106,7 @@ public class TourServiceImpl implements TourService {
 
     //4
     @Override
-    //@PreAuthorize("@accessChecker.isTourOwner(#id)")
+    @PreAuthorize("@accessChecker.isTourOwner(#id) || hasRole('ROLE_ADMIN')")
     public TourDTO deleteTour(Long id) {
         Tour existingTour = tourRepo.findById(id)
                 .orElseThrow(() -> new NotFoundServiceException("Tour not found"));

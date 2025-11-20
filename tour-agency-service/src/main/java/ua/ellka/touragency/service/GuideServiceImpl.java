@@ -2,6 +2,7 @@ package ua.ellka.touragency.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ua.ellka.touragency.dto.GuideDTO;
 import ua.ellka.touragency.exception.ExistingServiceException;
@@ -59,7 +60,7 @@ public class GuideServiceImpl implements GuideService {
 
     //14
     @Override
-    //@PreAuthorize("@accessChecker.isGuideOwner(#id)")
+    @PreAuthorize("@accessChecker.isGuideOwner(#id)")
     public GuideDTO updateGuide(Long id, GuideDTO guideDTO) {
         Guide updatedGuide = guideRepo.findById(id)
                 .orElseThrow(() -> new NotFoundServiceException("Guide not found"));
@@ -84,7 +85,7 @@ public class GuideServiceImpl implements GuideService {
 
     //15
     @Override
-    //@PreAuthorize("@accessChecker.isGuideOwner(#id)")
+    @PreAuthorize("@accessChecker.isGuideOwner(#id)")
     public GuideDTO deleteGuide(Long id) {
         Guide existingGuide = guideRepo.findById(id)
                 .orElseThrow(() -> new NotFoundServiceException("Guide not found"));
