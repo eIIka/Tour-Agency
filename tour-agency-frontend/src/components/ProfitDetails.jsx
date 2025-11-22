@@ -1,7 +1,10 @@
 import React from 'react';
 
+// URL для універсальної статичної заглушки (менший розмір)
+const STATIC_IMAGE_PLACEHOLDER = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500&auto=format&fit=crop&q=60";
+
 // Компонент для відображення детального звіту про прибуток для обраного туру
-const ProfitDetails = ({ tour, profitData }) => {
+const ProfitDetails = ({ tour, profitData, onBack }) => {
     // Якщо дані ще не завантажені
     if (!profitData) {
         return (
@@ -11,44 +14,61 @@ const ProfitDetails = ({ tour, profitData }) => {
         );
     }
 
-    // Ми очікуємо, що profitData.totalProfit буде числовим значенням,
-    // оскільки бекенд повертає BigDecimal.
+    // Ми очікуємо, що profitData.totalProfit буде числовим значенням.
     const totalProfit = parseFloat(profitData.totalProfit);
     const pricePerPerson = parseFloat(tour.price);
 
+    // Додаємо імітацію даних для презентабельності
+    const bookingsCount = Math.floor(totalProfit / pricePerPerson);
+    const costs = totalProfit * 0.15; // Імітація 15% витрат
+    const netProfit = totalProfit - costs;
+
+
     return (
-        <div className="p-6 bg-white rounded-lg shadow-lg">
-            <h3 className="text-2xl font-bold text-gray-800 border-b pb-2 mb-4">
+        <div className="profit-details-report">
+            {/* Кнопка повернення до списку */}
+            <button onClick={onBack} className="back-to-list-btn">
+                &larr; Back to Tour Selection
+            </button>
+
+            <h3 className="report-main-title">
                 Profit Report: {tour.name}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p className="report-subtitle">Analysis for tour name: {tour.name}</p>
 
-                {/* Метрика 1: Загальний Прибуток (відповідь від бекенду) */}
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200 col-span-full">
-                    <p className="text-sm font-medium text-green-600">Total Profit (Revenue based on bookings)</p>
-                    <p className="text-5xl font-extrabold text-green-700 mt-1">
-                        ${totalProfit.toFixed(2)}
-                    </p>
+            {/* Сітка метрик */}
+            <div className="profit-metrics-grid">
+
+                {/* Метрика 1: Загальний Дохід (Фактичний) */}
+                <div className="profit-metric metric-revenue">
+                    <p className="metric-label">Total Revenue (Based on Bookings)</p>
+                    <p className="metric-value">${totalProfit.toFixed(2)}</p>
                 </div>
 
-                {/* Додаткова інформація */}
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <p className="text-sm font-medium text-gray-500">Tour Price per person</p>
-                    <p className="text-xl font-bold text-gray-900 mt-1">${pricePerPerson.toFixed(2)}</p>
+                {/* Метрика 2: Чистий Прибуток (Імітація) */}
+                <div className="profit-metric metric-net-profit">
+                    <p className="metric-label">Estimated Net Profit</p>
+                    <p className="metric-value">${netProfit.toFixed(2)}</p>
+                </div>
+
+                {/* Метрика 3: Кількість Бронювань (Імітація) */}
+                <div className="profit-metric metric-bookings">
+                    <p className="metric-label">Booked Seats (Est.)</p>
+                    <p className="metric-value">{bookingsCount}</p>
+                </div>
+
+                {/* Метрика 4: Витрати (Імітація) */}
+                <div className="profit-metric metric-costs">
+                    <p className="metric-label">Estimated Costs (15%)</p>
+                    <p className="metric-value">${costs.toFixed(2)}</p>
                 </div>
             </div>
 
-            <p className="mt-4 text-sm text-gray-600">
-                * This value represents the total revenue before calculating actual costs.
+            <p className="report-note">
+                <span className="font-semibold">Tour Price:</span> ${pricePerPerson.toFixed(2)} per person.
+                (Gross revenue calculation: Total Price * Booked Seats).
             </p>
-
-            <button
-                onClick={() => window.location.reload()} // Оновлення сторінки, щоб повернутися до списку
-                className="mt-6 px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition duration-150"
-            >
-                &larr; Back to Tour List
-            </button>
         </div>
     );
 };
