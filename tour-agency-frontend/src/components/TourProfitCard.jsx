@@ -11,7 +11,9 @@ const TourProfitCard = ({ tours: tourList, error: tourError, loading: tourLoadin
     const [profitLoading, setProfitLoading] = useState(false);
     const [profitError, setProfitError] = useState('');
 
-    // Ефект, що викликає реальний API для отримання профіту
+    // URL для універсальної статичної заглушки
+    const STATIC_IMAGE_PLACEHOLDER = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500&auto=format&fit=crop&q=60";
+
     const fetchProfitDetails = async (tourId, tourPrice) => {
         setProfitLoading(true);
         setProfitError('');
@@ -21,7 +23,6 @@ const TourProfitCard = ({ tours: tourList, error: tourError, loading: tourLoadin
             // РЕАЛЬНИЙ API ВИКЛИК: GET /v1/tour/profit/{id}
             const response = await api.get(`/tour/profit/${tourId}`);
 
-            // Ми отримуємо одне число (BigDecimal), загортаємо його в об'єкт для ProfitDetails
             const totalProfit = response.data;
 
             setProfitData({
@@ -39,18 +40,23 @@ const TourProfitCard = ({ tours: tourList, error: tourError, loading: tourLoadin
 
     const handleTourSelect = (tour) => {
         setSelectedTour(tour);
-        // Передаємо ID туру та його ціну
         fetchProfitDetails(tour.id, tour.price);
     };
 
-    // Якщо завантаження ще триває або є помилка зі списком турів
+    const handleBackToList = () => {
+        setSelectedTour(null);
+        setProfitData(null);
+    };
+
+
+    // Обробка, коли список турів завантажується
     if (tourLoading) return <div className="text-center p-6 text-gray-500">Loading tours for analytics...</div>;
     if (tourError) return <div className="text-center p-6 text-red-500">{tourError}</div>;
 
     // Стан 1: Відображення детального звіту
     if (selectedTour) {
         return (
-            <div className="profit-details-view">
+            <div className="dashboard-card profit-details-view">
                 {profitLoading && (
                     <div className="text-center p-6 text-indigo-500">
                         Loading profit report...
@@ -60,37 +66,30 @@ const TourProfitCard = ({ tours: tourList, error: tourError, loading: tourLoadin
                     <div className="text-center p-6 text-red-500">{profitError}</div>
                 )}
 
-                {/* Відображаємо деталі лише якщо вони успішно завантажені */}
-                {profitData && <ProfitDetails tour={selectedTour} profitData={profitData} />}
+                {/* Передаємо обробник onBack */}
+                {profitData && <ProfitDetails tour={selectedTour} profitData={profitData} onBack={handleBackToList} />}
             </div>
         );
     }
 
     // Стан 2: Відображення списку турів
     return (
-        <div className="tour-list-for-analytics">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Select Tour for Profit Analysis</h2>
+        <div className="tour-list-for-analytics dashboard-card">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4" style={{marginBottom: '20px'}}>Select Tour for Profit Analysis</h2>
 
             {tourList.length === 0 ? (
                 <div className="p-4 bg-yellow-100 text-yellow-800 rounded-lg">
                     No tours found for analysis. {user.role === 'ROLE_GUIDE' ? 'You must create a tour first.' : 'The system has no tours.'}
                 </div>
             ) : (
-                <div className="space-y-3">
+                // ВИКОРИСТОВУЄМО ГРІД ДЛЯ ВІДОБРАЖЕННЯ КАРТОК
+                <div className="tours-grid-analytics">
                     {tourList.map((tour) => (
                         <div
                             key={tour.id}
-                            onClick={() => handleTourSelect(tour)}
-                            className="flex justify-between items-center p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-150 cursor-pointer"
+                            className="tour-card profit-card"
                         >
-                            <div className="flex flex-col">
-                                <span className="font-semibold text-lg text-indigo-600">Tour name: "{tour.name}"</span>
-                                <p></p>
-                                <span className="text-sm text-gray-500">Price: ${tour.price}</span>
-                            </div>
-                            <button className="text-sm font-medium text-indigo-500 hover:text-indigo-700">
-                                View Profit &rarr;
-                            </button>
+                            <TourCardContent tour={tour} onSelect={handleTourSelect} staticImage={STATIC_IMAGE_PLACEHOLDER} />
                         </div>
                     ))}
                 </div>
@@ -98,5 +97,47 @@ const TourProfitCard = ({ tours: tourList, error: tourError, loading: tourLoadin
         </div>
     );
 };
+
+// Допоміжний компонент для рендерингу вмісту картки Profit
+const TourCardContent = ({ tour, onSelect, staticImage }) => {
+    const displayImageUrl = tour.imageUrl || staticImage;
+
+    return (
+        <>
+            <div className="tour-image-container">
+                <img
+                    src={displayImageUrl}
+                    alt={tour.name}
+                    className="tour-image"
+                    onError={(e) => { e.target.onerror = null; e.target.src=staticImage }}
+                />
+            </div>
+
+            <div className="tour-content">
+                <div className="tour-location">
+                    📍 {tour.countryName || 'Unknown Country'}
+                </div>
+
+                <h3 className="tour-title">{tour.name}</h3>
+
+                <div className="tour-dates">
+                    📅 {tour.startDate} — {tour.endDate}
+                </div>
+
+                <div className="tour-footer">
+                    <span className="tour-price-small">
+                         Price: ${tour.price}
+                    </span>
+
+                    {/* Кнопка дії */}
+                    <button onClick={() => onSelect(tour)} className="tour-btn profit-btn">
+                        View Profit
+                    </button>
+                </div>
+            </div>
+        </>
+    );
+};
+
 
 export default TourProfitCard;

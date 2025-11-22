@@ -735,13 +735,17 @@ input[type="date"]:not([value=""])::before {
 
 .tab-btn:hover {
     color: #2563eb;
+    background-color: #f1f5f9;
+    border-radius: 8px;
 }
 
 .tab-btn.active {
     font-weight: 700;
-    color: #2563eb;
-    border-bottom: 3px solid #2563eb;
-    background-color: #f1f5f9;
+    color: white;
+    background-color: #2563eb;
+    border-color: #2563eb;
+    border-radius: 8px;
+    border-bottom: none;
 }
 
 .create-btn {
@@ -1107,4 +1111,129 @@ input[type="date"]:not([value=""])::before {
 .book-now-btn {
     margin-top: 30px;
     width: 100%;
+}
+
+/* === Стилі для Карток Аналітики === */
+
+/* Сітка для карток профіту */
+.tours-grid-analytics {
+    display: grid;
+    /* Змінюємо minmax для кращого відображення */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+/* Стилі для кнопки "View Profit" */
+.tour-footer .profit-btn {
+    background-color: #f0f4f9;
+    color: #2563eb;
+    font-weight: 700;
+}
+
+.tour-footer .profit-btn:hover {
+    background-color: #2563eb;
+    color: white;
+}
+
+/* Забезпечуємо, щоб контент картки Profit був на увесь контейнер */
+.tour-card.profit-card {
+    padding: 0 !important; /* Прибираємо стандартний padding з tour-card */
+}
+
+/* Додамо ціну меншим шрифтом для відображення на Profit Card */
+.tour-price-small {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* === Стилі для метрик звіту (ProfitDetails) === */
+.profit-details-report {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.report-main-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+.report-subtitle {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+}
+
+.report-note {
+    font-size: 0.9rem;
+    color: #64748b;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 15px;
+    margin-top: 20px;
+}
+
+
+/* Сітка метрик */
+.profit-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.profit-metric {
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background-color: #3b82f6; /* Дефолтний синій */
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.metric-value {
+    font-size: 2.5rem; /* Великий розмір для чисел */
+    font-weight: 800;
+}
+
+/* Кольорові схеми для метрик */
+.metric-revenue {
+    background-color: #10b981; /* Зелений для Доходу */
+}
+.metric-bookings {
+    background-color: #3b82f6; /* Синій для Бронювань */
+}
+.metric-costs {
+    background-color: #f59e0b; /* Жовтий для Витрат */
+}
+.metric-net-profit {
+    background-color: #ef4444; /* Червоний для Чистого Профіту */
+}
+
+/* Стиль для кнопки Back */
+.back-to-list-btn {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.back-to-list-btn:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
 }
