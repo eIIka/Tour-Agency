@@ -33,9 +33,10 @@ COPY tour-agency-web/src tour-agency-web/src
 # 3. Виконуємо повну збірку
 RUN ./mvnw clean package -DskipTests
 
-# 4. FIX: Знаходимо зібраний JAR і переміщуємо його в /app/app.jar
-# Це робить шлях до JAR-файлу абсолютним і надійним
-RUN find tour-agency-web/target -name "*.jar" -print -quit -exec mv {} app.jar \;
+# FIX: Знаходимо зібраний JAR та переміщуємо його в корінь стадії
+# Ми використовуємо COPY, щоб отримати файл, а потім перейменовуємо.
+# Спочатку копіюємо JAR у відому тимчасову папку /tmp
+RUN cp tour-agency-web/target/*.jar /tmp/app.jar
 
 # ----------------------------------------------------
 # STAGE 2: RUNTIME (Фінальний образ)
@@ -45,8 +46,8 @@ FROM eclipse-temurin:21-jre-jammy
 # Встановлюємо робочу директорію
 WORKDIR /app
 
-# Копіюємо JAR-файл, який був переміщений у /app на стадії 'build'
-COPY --from=build /app/app.jar app.jar
+# FIX: Копіюємо файл з відомого шляху /tmp/app.jar
+COPY --from=build /tmp/app.jar app.jar
 
 EXPOSE 8080
 
