@@ -1,5 +1,5 @@
 # Використовуємо офіційний образ Java 21 (або ту версію, яку ви використовуєте)
-FROM openjdk:21-jdk-slim AS build
+FROM eclipse-temurin:21-jdk-jammy AS build
 
 # Встановлюємо робочу директорію
 WORKDIR /app
@@ -25,7 +25,7 @@ COPY src tour-agency-web/src
 # Виконуємо повну збірку проєкту
 RUN ./mvnw clean package -DskipTests
 
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jdk-jammy
 
 # Встановлюємо робочу директорію
 WORKDIR /app
