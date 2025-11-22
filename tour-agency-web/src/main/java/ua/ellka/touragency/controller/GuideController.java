@@ -43,4 +43,9 @@ public class GuideController {
 
         return ResponseEntity.ok(deleteGuide);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<GuideDTO> getMyProfile() {
+        return ResponseEntity.ok(guideService.getCurrentGuide());
+    }
 }

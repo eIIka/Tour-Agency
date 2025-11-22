@@ -23,14 +23,26 @@ public class TourController {
         return ResponseEntity.ok(allTours);
     }
 
-    @GetMapping("/country/{countryId}")
-    public ResponseEntity<List<TourDTO>> getToursByCountryId(@PathVariable(name = "countryId") Long countryId) {
-        List<TourDTO> getToursByCountryId = tourService.getToursByCountryId(countryId);
+    @GetMapping("/{id}")
+    public ResponseEntity<TourDTO> getTourById(@PathVariable Long id) {
+        return ResponseEntity.ok(tourService.getTourById(id));
+    }
+
+    @GetMapping("/country/{countryName}")
+    public ResponseEntity<List<TourDTO>> getToursByCountryName(@PathVariable(name = "countryName") String countryName) {
+        List<TourDTO> getToursByCountryId = tourService.getToursByCountryName(countryName);
 
         return ResponseEntity.ok(getToursByCountryId);
     }
 
-    @GetMapping("/guide/{guideId}")
+    @GetMapping("/guide/{guideName}")
+    public ResponseEntity<List<TourDTO>> getToursByGuideName(@PathVariable(name = "guideName") String guideName) {
+        List<TourDTO> getToursByGuideId = tourService.getToursByGuideName(guideName);
+
+        return ResponseEntity.ok(getToursByGuideId);
+    }
+
+    @GetMapping("/guide/id/{guideId}") // <-- НОВИЙ/ВІДНОВЛЕНИЙ ЕНДПОІНТ
     public ResponseEntity<List<TourDTO>> getToursByGuideId(@PathVariable(name = "guideId") Long guideId) {
         List<TourDTO> getToursByGuideId = tourService.getToursByGuideId(guideId);
 

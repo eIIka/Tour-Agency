@@ -40,12 +40,26 @@
         </dependency>
         <dependency>
             <groupId>ua.ellka.touragency</groupId>
+            <artifactId>tour-agency-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ua.ellka.touragency</groupId>
             <artifactId>tour-agency-service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ua.ellka.touragency</groupId>
+            <artifactId>tour-agency-security</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
     </dependencies>
 </project>
