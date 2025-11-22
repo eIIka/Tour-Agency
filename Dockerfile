@@ -30,12 +30,19 @@ COPY tour-agency-web/src tour-agency-web/src
 # 3. Виконуємо повну збірку
 RUN ./mvnw clean package -DskipTests
 
+# FIX: Знаходимо зібраний JAR і переміщуємо його в /app/app.jar на стадії BUILD
+# Це гарантує, що JAR буде доступний для копіювання з відомого шляху
+RUN find tour-agency-web/target -name "*.jar" -print -quit -exec mv {} app.jar \;
+
+# ————————————————————————————————————
+# Друга стадія: Фінальний образ
+# ————————————————————————————————————
 FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-# Копіюємо зібраний JAR-файл
-COPY --from=build tour-agency-web/target/*.jar app.jar
+# FIX: Копіюємо файл з кореня стадії 'build'
+COPY --from=build /app/app.jar app.jar
 
 EXPOSE 8080
 
