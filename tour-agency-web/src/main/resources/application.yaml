@@ -1,21 +1,21 @@
 spring:
   jpa:
-    database: MYSQL
+    database: POSTGRESQL
     show-sql: true
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   datasource:
-    url: jdbc:mysql://${JDBC_DB_HOST}:${JDBC_DB_PORT}/${JDBC_DB_NAME}
+    url: jdbc:postgresql://${JDBC_DB_HOST}/${JDBC_DB_NAME}
     password: ${JDBC_DB_PASSWORD}
     username: ${JDBC_DB_USER}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driverClassName: org.postgresql.Driver
   sql:
     init:
-      platform: mysql
+      platform: postgresql
   security:
     oauth2:
       client:
