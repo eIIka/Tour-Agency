@@ -16,8 +16,12 @@ public class TourDTO {
     private Long id;
     private String name;
     private Long countryId;
+    private String countryName;
+    private String countryRegion;
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal price;
     private Long guideId;
+    private String guideName;
+    private String imageUrl;
 }

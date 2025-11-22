@@ -40,4 +40,7 @@ public class Tour {
     @JoinColumn(name = "guide_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Guide guide;
+
+    @Column(name = "image_url", length = 512)
+    private String imageUrl;
 }
