@@ -1,8 +1,10 @@
 // src/api/axiosConfig.js
 import axios from 'axios';
 
+const API_BASE_URL = 'https://tour-agency-backend.onrender.com/v1';
+
 const api = axios.create({
-    baseURL: 'http://localhost:8080/v1', // Ваш префікс з AuthController
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
