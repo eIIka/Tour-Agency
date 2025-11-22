@@ -18,15 +18,31 @@ public class AccessChecker {
     private final TourRepo tourRepo;
 
     public boolean isClientOwner(Long clientId) {
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) return false;
+
+        // Шукаємо клієнта, ID якого передано, і перевіряємо, чи збігається його User ID з поточним
         return clientRepo.findById(clientId)
-                .map(client -> client.getUser().getId().equals(getCurrentUserId()))
+                .map(client -> client.getUser().getId().equals(currentUserId))
                 .orElse(false);
     }
 
-    public boolean isGuideOwner(Long guideId) {
-        return guideRepo.findById(guideId)
-                .map(client -> client.getUser().getId().equals(getCurrentUserId()))
-                .orElse(false);
+    // Аналогічно для гіда
+    public boolean isGuideOwner(Long userId) {
+        Long currentUserId = getCurrentUserId();
+
+        if (currentUserId == null || !currentUserId.equals(userId)) {
+            return false;
+        }
+        return guideRepo.findByUserId(userId).isPresent();
+    }
+
+    private Long getCurrentUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof TourAgencyUserDetails userDetails) {
+            return userDetails.getId();
+        }
+        return null;
     }
 
     public boolean isBookingOwner(Long bookingId) {
@@ -40,13 +56,5 @@ public class AccessChecker {
         return tourRepo.findById(tourId)
                 .map(tour -> tour.getGuide().getUser().getId().equals(getCurrentUserId()))
                 .orElse(false);
-    }
-
-    private Long getCurrentUserId() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof TourAgencyUserDetails userDetails) {
-            return userDetails.getId();
-        }
-        return null;
     }
 }

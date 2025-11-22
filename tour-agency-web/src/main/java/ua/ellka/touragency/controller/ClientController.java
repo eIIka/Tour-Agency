@@ -50,4 +50,9 @@ public class ClientController {
 
         return ResponseEntity.ok(deletedClient);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ClientDTO> getMyProfile() {
+        return ResponseEntity.ok(clientService.getCurrentClient());
+    }
 }

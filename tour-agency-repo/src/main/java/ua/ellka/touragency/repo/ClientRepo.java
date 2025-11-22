@@ -9,4 +9,5 @@ public interface ClientRepo extends JpaRepository<Client, Long> {
     Optional<Client> findByPassportNumber(String passportNumber);
     Optional<Client> findByPhone(String phone);
     Optional<Client> findByName(String name);
+    Optional<Client> findByUserId(Long userId);
 }

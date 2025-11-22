@@ -10,8 +10,10 @@ public interface TourService {
     List<TourDTO> getAllTours();
     TourDTO updateTour(Long id, TourDTO tourDTO);
     TourDTO deleteTour(Long id);
+    List<TourDTO> getToursByGuideName(String guideName);
     List<TourDTO> getToursByGuideId(Long guideId);
-    List<TourDTO> getToursByCountryId(Long countryId);
+    List<TourDTO> getToursByCountryName(String countryName);
     List<TourDTO> getMostPopularTours();
     BigDecimal getTourProfit(Long id);
+    TourDTO getTourById(Long id);
 }

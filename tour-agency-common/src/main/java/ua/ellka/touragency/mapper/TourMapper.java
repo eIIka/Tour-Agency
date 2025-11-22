@@ -13,9 +13,13 @@ public interface TourMapper {
 
     @Mapping(source = "country.id", target = "countryId")
     @Mapping(source = "guide.id", target = "guideId")
+    @Mapping(source = "country.name", target = "countryName")
+    @Mapping(source = "guide.name", target = "guideName")
+    @Mapping(source = "country.region", target = "countryRegion")
     TourDTO tourToTourDTO(Tour tour);
 
-    @Mapping(source = "countryId", target = "country.id")
-    @Mapping(source = "guideId", target = "guide.id")
+    // Мапінг з TourDTO на Tour (Вхідні дані) - ЛИШЕ ПРОСТІ ПОЛЯ
+    @Mapping(target = "country", ignore = true)
+    @Mapping(target = "guide", ignore = true)
     Tour tourDTOToTour(TourDTO tourDTO);
 }
