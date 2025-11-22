@@ -3,6 +3,7 @@ package ua.ellka.touragency.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ua.ellka.touragency.dto.ClientDTO;
 import ua.ellka.touragency.exception.ExistingServiceException;
@@ -12,6 +13,7 @@ import ua.ellka.touragency.mapper.ClientMapper;
 import ua.ellka.touragency.model.Booking;
 import ua.ellka.touragency.model.Client;
 import ua.ellka.touragency.model.User;
+import ua.ellka.touragency.model.security.TourAgencyUserDetails;
 import ua.ellka.touragency.repo.BookingRepo;
 import ua.ellka.touragency.repo.ClientRepo;
 import ua.ellka.touragency.repo.CountryRepo;
@@ -77,37 +79,32 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @PreAuthorize("@accessChecker.isClientOwner(#id) || hasRole('ROLE_ADMIN')")
     public ClientDTO updateClient(Long id, ClientDTO clientDTO) {
-        Client updatedClient = clientRepo.findById(id)
-                .orElseThrow(() -> new NotFoundServiceException("Client not found"));
+        Client updatedClient = clientRepo.findByUserId(id)
+                .orElseThrow(() -> new NotFoundServiceException("Client with id " + id + " not found"));
 
-        clientRepo.findByPassportNumber(clientDTO.getPassportNumber())
-                .filter(c -> !c.getId().equals(id))
-                .ifPresent(c -> {
-                    throw new ExistingServiceException("Passport number already exists");
-                });
+        if (clientDTO.getPhone() != null) {
+            clientRepo.findByPhone(clientDTO.getPhone())
+                    .filter(c -> !c.getId().equals(updatedClient.getId()))
+                    .ifPresent(c -> {
+                        throw new ExistingServiceException("Phone already exists");
+                    });
+            updatedClient.setPhone(clientDTO.getPhone());
+        }
 
-        clientRepo.findByPhone(clientDTO.getPhone())
-                .filter(c -> !c.getId().equals(id))
-                .ifPresent(c -> {
-                    throw new ExistingServiceException("Phone already exists");
-                });
+        if (clientDTO.getPassportNumber() != null) {
+            clientRepo.findByPassportNumber(clientDTO.getPassportNumber())
+                    .filter(c -> !c.getId().equals(updatedClient.getId()))
+                    .ifPresent(c -> {
+                        throw new ExistingServiceException("Passport number already exists");
+                    });
+            updatedClient.setPassportNumber(clientDTO.getPassportNumber());
+        }
 
-        clientRepo.findByName(clientDTO.getName())
-                .filter(c -> !c.getId().equals(id))
-                .ifPresent(c -> {
-                    throw new ExistingServiceException("Name already exists");
-                });
+        if (clientDTO.getName() != null) {
+            updatedClient.setName(clientDTO.getName());
+        }
 
-        updatedClient.setName(clientDTO.getName());
-        updatedClient.setPassportNumber(clientDTO.getPassportNumber());
-        updatedClient.setPhone(clientDTO.getPhone());
-
-       try {
-           Client save = clientRepo.save(updatedClient);
-           return clientMapper.clientToClientDTO(save);
-       }catch (DataAccessException e) {
-           throw new ServiceException("Error while updating client: " + e.getMessage());
-       }
+        return clientMapper.clientToClientDTO(clientRepo.save(updatedClient));
     }
 
     //11
@@ -147,5 +144,17 @@ public class ClientServiceImpl implements ClientService {
         return clients.stream()
                 .map(clientMapper::clientToClientDTO)
                 .toList();
+    }
+
+    @Override
+    public ClientDTO getCurrentClient() {
+        // Отримуємо ID поточного юзера з токена
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((TourAgencyUserDetails) principal).getId();
+
+        Client client = clientRepo.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundServiceException("Client profile not found"));
+
+        return clientMapper.clientToClientDTO(client);
     }
 }

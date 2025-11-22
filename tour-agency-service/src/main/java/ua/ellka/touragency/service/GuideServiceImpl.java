@@ -3,6 +3,7 @@ package ua.ellka.touragency.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ua.ellka.touragency.dto.GuideDTO;
 import ua.ellka.touragency.exception.ExistingServiceException;
@@ -11,6 +12,7 @@ import ua.ellka.touragency.exception.ServiceException;
 import ua.ellka.touragency.mapper.GuideMapper;
 import ua.ellka.touragency.model.Guide;
 import ua.ellka.touragency.model.User;
+import ua.ellka.touragency.model.security.TourAgencyUserDetails;
 import ua.ellka.touragency.repo.GuideRepo;
 import ua.ellka.touragency.repo.UserRepo;
 
@@ -60,10 +62,10 @@ public class GuideServiceImpl implements GuideService {
 
     //14
     @Override
-    @PreAuthorize("@accessChecker.isGuideOwner(#id)")
+    @PreAuthorize("@accessChecker.isGuideOwner(#id) || hasRole('ROLE_ADMIN')")
     public GuideDTO updateGuide(Long id, GuideDTO guideDTO) {
-        Guide updatedGuide = guideRepo.findById(id)
-                .orElseThrow(() -> new NotFoundServiceException("Guide not found"));
+        Guide updatedGuide = guideRepo.findByUserId(id)
+                .orElseThrow(() -> new NotFoundServiceException("Guides with id " + id + " not found"));
 
         guideRepo.findByName(guideDTO.getName())
                 .filter(g -> !g.getId().equals(id))
@@ -71,7 +73,6 @@ public class GuideServiceImpl implements GuideService {
                     throw new ExistingServiceException("Name already exists");
                 });
 
-        updatedGuide.setId(id);
         updatedGuide.setName(guideDTO.getName());
         updatedGuide.setLanguage(guideDTO.getLanguage());
 
@@ -99,5 +100,16 @@ public class GuideServiceImpl implements GuideService {
         } catch (DataAccessException e) {
             throw new ServiceException("Failed to delete guide due to database error");
         }
+    }
+
+    @Override
+    public GuideDTO getCurrentGuide() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = ((TourAgencyUserDetails) principal).getId();
+
+        Guide guide = guideRepo.findByUserId(userId)
+                .orElseThrow(() -> new NotFoundServiceException("Guide profile not found"));
+
+        return guideMapper.guideToGuideDTO(guide);
     }
 }

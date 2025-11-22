@@ -10,4 +10,5 @@ public interface ClientService {
     ClientDTO updateClient(Long id, ClientDTO clientDTO);
     ClientDTO deleteClient(Long id);
     List<ClientDTO> getClientsByCountry(Long countryId);
+    ClientDTO getCurrentClient();
 }

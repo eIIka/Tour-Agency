@@ -3,7 +3,10 @@ package ua.ellka.touragency.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ua.ellka.touragency.dto.BookingDTO;
 import ua.ellka.touragency.exception.ExistingServiceException;
 import ua.ellka.touragency.exception.NotFoundServiceException;
@@ -12,10 +15,12 @@ import ua.ellka.touragency.mapper.BookingMapper;
 import ua.ellka.touragency.model.Booking;
 import ua.ellka.touragency.model.Client;
 import ua.ellka.touragency.model.Tour;
+import ua.ellka.touragency.model.security.TourAgencyUserDetails;
 import ua.ellka.touragency.repo.BookingRepo;
 import ua.ellka.touragency.repo.ClientRepo;
 import ua.ellka.touragency.repo.TourRepo;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,22 +36,39 @@ public class BookingServiceImpl implements BookingService {
 
     //16
     @Override
+    @Transactional
     public BookingDTO createBooking(BookingDTO bookingDTO) {
-        Booking booking = bookingMapper.bookingDTOToBooking(bookingDTO);
+        Long currentUserId = getCurrentUserId();
+        if (currentUserId == null) {
+            throw new AuthorizationDeniedException("User must be authenticated to create a booking.");
+        }
 
-        Tour tour = tourRepo.findById(booking.getTour().getId())
-                .orElseThrow(() -> new NotFoundServiceException("Tour not found"));
+        // 1. Шукаємо клієнта за User ID
+        Client client = clientRepo.findByUserId(currentUserId)
+                .orElseThrow(() -> new NotFoundServiceException("Client profile not found."));
 
-        Client client = clientRepo.findById(bookingDTO.getClientId())
-                .orElseThrow(() -> new NotFoundServiceException("Client not found"));
+        // 2. Шукаємо об'єкт Туру, використовуючи tourId з DTO
+        Tour tour = tourRepo.findById(bookingDTO.getTourId())
+                .orElseThrow(() -> new NotFoundServiceException("Tour not found with ID: " + bookingDTO.getTourId()));
 
-        booking.setClient(client);
-        booking.setTour(tour);
-
-        bookingRepo.findExistingBooking(bookingDTO.getTourId(), bookingDTO.getClientId(), bookingDTO.getBookingDate())
+        // 3. Перевірка дублікатів
+        bookingRepo.findExistingBooking(bookingDTO.getTourId(), client.getId(), bookingDTO.getBookingDate())
                 .ifPresent(existingBooking -> {
                     throw new ExistingServiceException("Booking already exists");
                 });
+
+        // 4. Створення моделі Booking (через мапер для простих полів)
+        Booking booking = bookingMapper.bookingDTOToBooking(bookingDTO);
+
+        // 5. ВАЖЛИВО: Присвоюємо об'єкти
+        booking.setClient(client);
+        booking.setTour(tour);
+
+        // 6. Встановлення дати
+        if(bookingDTO.getBookingDate() == null) {
+            booking.setBookingDate(LocalDate.now());
+        }
+
         try {
             Booking save = bookingRepo.save(booking);
             return bookingMapper.bookingToBookingDTO(save);
@@ -57,7 +79,7 @@ public class BookingServiceImpl implements BookingService {
 
     //17
     @Override
-    @PreAuthorize("@accessChecker.isClientOwner(#clientId)")
+    @PreAuthorize("@accessChecker.isClientOwner(#clientId)|| hasRole('ROLE_ADMIN')")
     public List<BookingDTO> getAllBookingsByClientId(Long clientId) {
         clientRepo.findById(clientId)
                 .orElseThrow(() -> new NotFoundServiceException("Client not found"));
@@ -91,7 +113,7 @@ public class BookingServiceImpl implements BookingService {
 
     //19
     @Override
-    @PreAuthorize("@accessChecker.isBookingOwner(#id)")
+    @PreAuthorize("@accessChecker.isBookingOwner(#id)|| hasRole('ROLE_ADMIN')")
     public BookingDTO deleteBooking(Long id) {
         Booking existingBooking = bookingRepo.findById(id)
                 .orElseThrow(() -> new NotFoundServiceException("Booking not found"));
@@ -116,6 +138,14 @@ public class BookingServiceImpl implements BookingService {
                         BookingRepo.BookingCountByMonthResult::getMonth,
                         BookingRepo.BookingCountByMonthResult::getCount
                 ));
+    }
+
+    private Long getCurrentUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof TourAgencyUserDetails userDetails) {
+            return userDetails.getId();
+        }
+        return null;
     }
 
 }

@@ -9,4 +9,5 @@ public interface GuideService {
     List<GuideDTO> getAllGuides();
     GuideDTO updateGuide(Long id, GuideDTO guideDTO);
     GuideDTO deleteGuide(Long id);
+    GuideDTO getCurrentGuide();
 }

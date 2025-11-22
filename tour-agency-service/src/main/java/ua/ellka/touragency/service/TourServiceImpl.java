@@ -21,6 +21,7 @@ import ua.ellka.touragency.repo.TourRepo;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,20 +36,48 @@ public class TourServiceImpl implements TourService {
     //1
     @Override
     public TourDTO createTour(TourDTO tourDTO) {
+        // 1. Перевірка унікальності імені туру
         tourRepo.findByName(tourDTO.getName())
                 .ifPresent(exists -> {
-                    throw new ExistingServiceException("Name already exists");
+                    throw new ExistingServiceException("Tour name already exists");
                 });
 
-        countryRepo.findById(tourDTO.getCountryId())
-                .orElseThrow(() -> new NotFoundServiceException("Country not found"));
+        // 2. Логіка Upsert для Країни
+        Country country;
+        if (tourDTO.getCountryName() != null && !tourDTO.getCountryName().isBlank()) {
 
-        guideRepo.findById(tourDTO.getGuideId())
-                .orElseThrow(() -> new NotFoundServiceException("Guide not found"));
+            Optional<Country> existingCountry = countryRepo.findByNameAndRegion(tourDTO.getCountryName(), tourDTO.getCountryRegion());
+
+            if (existingCountry.isEmpty()) {
+                // Країна не знайдена -> Створюємо нову країну
+                country = new Country();
+                country.setName(tourDTO.getCountryName());
+                country.setRegion(tourDTO.getCountryRegion() != null ? tourDTO.getCountryRegion() : "Unknown Region");
+                country = countryRepo.save(country);
+            } else {
+                country = existingCountry.get();
+            }
+        } else {
+            // Якщо назва не передана
+            throw new NotFoundServiceException("Country name is required.");
+        }
+
+        // 3. Перевірка Гіда (ID має прийти з фронтенду)
+        Guide guide = guideRepo.findById(tourDTO.getGuideId())
+                .orElseThrow(() -> new NotFoundServiceException("Guide not found with ID: " + tourDTO.getGuideId()));
 
         try {
+            // 4. Мапінг простих полів та ручне присвоєння об'єктів
             Tour tour = tourMapper.tourDTOToTour(tourDTO);
+
+            // ВАЖЛИВО: Присвоюємо об'єкти, які ми знайшли/створили в БД
+            tour.setCountry(country);
+            tour.setGuide(guide);
+            tour.setImageUrl(tourDTO.getImageUrl());
+
             Tour save = tourRepo.save(tour);
+
+            // Повертаємо DTO з повною інформацією
             return tourMapper.tourToTourDTO(save);
         }catch (DataAccessException e) {
             throw new ServiceException("Error while creating tour: " + e.getMessage());
@@ -71,32 +100,67 @@ public class TourServiceImpl implements TourService {
     @Override
     @PreAuthorize("@accessChecker.isTourOwner(#id) || hasRole('ROLE_ADMIN')")
     public TourDTO updateTour(Long id, TourDTO tourDTO) {
+        // 1. Знаходимо існуючий тур для оновлення
         Tour updateTour = tourRepo.findById(id)
-                .orElseThrow(() -> new NotFoundServiceException("Tour not found"));
+                .orElseThrow(() -> new NotFoundServiceException("Tour not found with ID: " + id));
 
+        // 2. Перевірка унікальності імені туру (якщо ім'я змінилося)
         tourRepo.findByName(tourDTO.getName())
-                .filter(tour -> !tour.getId().equals(id))
+                .filter(tour -> !tour.getId().equals(id)) // Виключаємо поточний тур із перевірки
                 .ifPresent(exists -> {
-                    throw new ExistingServiceException("Name already exists");
+                    throw new ExistingServiceException("Tour name already exists");
                 });
 
-        Country country = countryRepo.findById(tourDTO.getCountryId())
-                .orElseThrow(() -> new NotFoundServiceException("Country not found"));
+        // 3. Логіка Upsert для Країни
+        Country country;
 
-        Guide guide = guideRepo.findById(tourDTO.getGuideId())
-                .orElseThrow(() -> new NotFoundServiceException("Guide not found"));
+        // Перевіряємо, чи була передана назва країни (з фронтенду)
+        if (tourDTO.getCountryName() != null && !tourDTO.getCountryName().isBlank()) {
 
-        Tour tour = tourMapper.tourDTOToTour(tourDTO);
+            // Спробуємо знайти країну за назвою та регіоном
+            Optional<Country> existingCountry = countryRepo.findByNameAndRegion(tourDTO.getCountryName(), tourDTO.getCountryRegion());
 
-        updateTour.setId(id);
-        updateTour.setName(tour.getName());
-        updateTour.setCountry(country);
-        updateTour.setPrice(tour.getPrice());
-        updateTour.setGuide(guide);
-        updateTour.setEndDate(tour.getEndDate());
-        updateTour.setStartDate(tour.getStartDate());
+            if (existingCountry.isEmpty()) {
+                // Країна не знайдена -> Створюємо нову країну
+                country = new Country();
+                country.setName(tourDTO.getCountryName());
+                country.setRegion(tourDTO.getCountryRegion() != null ? tourDTO.getCountryRegion() : "Unknown Region");
+                country = countryRepo.save(country);
+            } else {
+                // Країна знайдена -> Використовуємо існуючий об'єкт
+                country = existingCountry.get();
+            }
+        } else {
+            // Якщо назва країни не передана, залишаємо ту, що була
+            country = updateTour.getCountry();
+        }
+
+        // 4. Перевірка Гіда (ID має бути в DTO, якщо це зміна гіда)
+        Guide guide;
+        if (tourDTO.getGuideId() != null) {
+            guide = guideRepo.findById(tourDTO.getGuideId())
+                    .orElseThrow(() -> new NotFoundServiceException("Guide not found with ID: " + tourDTO.getGuideId()));
+        } else {
+            // Залишаємо поточного гіда
+            guide = updateTour.getGuide();
+        }
 
         try {
+            // 5. Мапінг простих полів DTO до моделі Tour
+            Tour mappedTour = tourMapper.tourDTOToTour(tourDTO);
+
+            // 6. Присвоєння оновлених/знайдених об'єктів
+            updateTour.setName(mappedTour.getName());
+            updateTour.setPrice(mappedTour.getPrice());
+            updateTour.setStartDate(mappedTour.getStartDate());
+            updateTour.setEndDate(mappedTour.getEndDate());
+
+            // Оновлюємо зв'язки
+            updateTour.setCountry(country);
+            updateTour.setGuide(guide);
+
+            updateTour.setImageUrl(tourDTO.getImageUrl());
+
             Tour save = tourRepo.save(updateTour);
             return tourMapper.tourToTourDTO(save);
         }catch (DataAccessException e) {
@@ -121,28 +185,64 @@ public class TourServiceImpl implements TourService {
 
     //20
     @Override
-    public List<TourDTO> getToursByCountryId(Long countryId) {
-        countryRepo.findById(countryId)
-                .orElseThrow(() -> new NotFoundServiceException("Country not found"));
-
-        List<Tour> toursByCountryId = tourRepo.findToursByCountryId(countryId);
-        if (toursByCountryId.isEmpty()) {
-            throw new NotFoundServiceException("No Tours found for country id " + countryId);
+    public List<TourDTO> getToursByCountryName(String countryName) {
+        List<Country> byName = countryRepo.findByName(countryName);
+        if (byName.isEmpty()) {
+            throw new NotFoundServiceException("Country not found with name: " + countryName);
         }
 
-        return toursByCountryId.stream()
+        String name = byName.get(0).getName();
+
+        List<Tour> toursByCountryName = tourRepo.findToursByCountryName(name);
+        if (toursByCountryName.isEmpty()) {
+            throw new NotFoundServiceException("No Tours found for country name " + name);
+        }
+
+        return toursByCountryName.stream()
                 .map(tourMapper::tourToTourDTO)
                 .toList();
     }
 
     //21
     @Override
-    public List<TourDTO> getToursByGuideId(Long guideId) {
-        guideRepo.findById(guideId)
-                .orElseThrow(() -> new NotFoundServiceException("Guide not found"));
+    public List<TourDTO> getToursByGuideName(String guideName) {
 
-        List<Tour> toursByGuideId = tourRepo.findToursByGuideId(guideId);
+        // 1. Шукаємо всіх гідів, які відповідають імені (нечутливо до регістру)
+        List<Guide> matchingGuides = guideRepo.findByNameContainingIgnoreCase(guideName);
+
+        if (matchingGuides.isEmpty()) {
+            throw new NotFoundServiceException("Guide not found with name: " + guideName);
+        }
+
+        // 2. Збираємо ID всіх знайдених гідів
+        List<Long> guideIds = matchingGuides.stream()
+                .map(Guide::getId)
+                .toList();
+
+        // 3. Шукаємо тури, створені цими гідами (потрібен метод findByGuideIdIn у TourRepo!)
+        List<Tour> toursByGuides = tourRepo.findByGuideIdIn(guideIds);
+
+        if (toursByGuides.isEmpty()) {
+            // Якщо гідів знайшли, але вони не створили турів
+            throw new NotFoundServiceException("No Tours found for guide name " + guideName);
+        }
+
+        return toursByGuides.stream()
+                .map(tourMapper::tourToTourDTO)
+                .toList();
+    }
+
+    @Override
+    public List<TourDTO> getToursByGuideId(Long guideId) {
+        // Перевірка існування гіда (якщо потрібно)
+        guideRepo.findById(guideId)
+                .orElseThrow(() -> new NotFoundServiceException("Guide not found with id: " + guideId));
+
+        // TourRepo повинен мати метод для пошуку за guideId
+        List<Tour> toursByGuideId = tourRepo.findToursByGuideId(guideId); // Припускаємо, що метод існує
+
         if (toursByGuideId.isEmpty()) {
+            // Якщо турів немає, кидаємо 404, який Dashboard обробить як "No tours created"
             throw new NotFoundServiceException("No Tours found for guide id " + guideId);
         }
 
@@ -174,12 +274,13 @@ public class TourServiceImpl implements TourService {
 
         return popularTours.stream()
                 .map(tourMapper::tourToTourDTO)
+                .limit(5)
                 .toList();
     }
 
     //25
     @Override
-    //@PreAuthorize("@accessChecker.isTourOwner(#id) || hasRole('ADMIN')")
+    @PreAuthorize("@accessChecker.isTourOwner(#id) || hasRole('ADMIN')")
     public BigDecimal getTourProfit(Long id) {
         Tour tour = tourRepo.findById(id)
                 .orElseThrow(() -> new NotFoundServiceException("Tour not found"));
@@ -192,5 +293,12 @@ public class TourServiceImpl implements TourService {
         BigDecimal tourPrice = tour.getPrice();
         int bookingCount = bookingsForTour.size();
         return tourPrice.multiply(BigDecimal.valueOf(bookingCount));
+    }
+
+    @Override
+    public TourDTO getTourById(Long id) {
+        Tour tour = tourRepo.findById(id)
+                .orElseThrow(() -> new NotFoundServiceException("Tour not found with id: " + id));
+        return tourMapper.tourToTourDTO(tour);
     }
 }
