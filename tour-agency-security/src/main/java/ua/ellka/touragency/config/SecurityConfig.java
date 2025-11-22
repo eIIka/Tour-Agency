@@ -137,7 +137,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Дозволяємо фронтенд (зверніть увагу, без слеша в кінці)
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("https://tour-agency-frontend-3zfm.onrender.com"));
 
         // Дозволяємо методи
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
