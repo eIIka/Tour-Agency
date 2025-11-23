@@ -7,4 +7,5 @@ import java.util.List;
 public interface UserService {
     List<UserDTO> getAllUser();
     UserDTO getUserById(Long id);
+    UserDTO deleteUser(Long userId);
 }

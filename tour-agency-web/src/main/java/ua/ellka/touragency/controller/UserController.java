@@ -2,10 +2,7 @@ package ua.ellka.touragency.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ua.ellka.touragency.dto.UserDTO;
 import ua.ellka.touragency.service.UserService;
 
@@ -26,6 +23,12 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         UserDTO userById = userService.getUserById(id);
+        return ResponseEntity.ok(userById);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserDTO> deleteUserById(@PathVariable Long id) {
+        UserDTO userById = userService.deleteUser(id);
         return ResponseEntity.ok(userById);
     }
 }
