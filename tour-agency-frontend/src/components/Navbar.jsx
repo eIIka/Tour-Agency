@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext } from '../context/AuthContext.jsx'; // Виправлено шлях
 import '../App.css';
 
 const Navbar = () => {
@@ -22,35 +22,42 @@ const Navbar = () => {
                 <div className="nav-links">
                     <Link to="/" className="nav-item">Home</Link>
 
-                    {/* === НОВЕ: Посилання на Dashboard === */}
-                    {(user?.role === 'ROLE_GUIDE' || user?.role === 'ROLE_ADMIN') && (
-                        <Link to="/dashboard" className="nav-item" style={{fontWeight: 600}}>
-                            Dashboard
-                        </Link>
-                    )}
-                    {/* ================================== */}
-
                     {user ? (
-                        // ... (якщо залогінений)
                         <>
-                            {/* NEW: Посилання на бронювання для Клієнтів */}
+                            {/* Посилання на Dashboard (ГІД / АДМІН) */}
+                            {(user.role === 'ROLE_GUIDE' || user.role === 'ROLE_ADMIN') && (
+                                <Link to="/dashboard" className="nav-item" style={{fontWeight: 600}}>
+                                    Dashboard
+                                </Link>
+                            )}
+
+                            {/* Посилання на User Management (ТІЛЬКИ АДМІН) */}
+                            {user.role === 'ROLE_ADMIN' && (
+                                <Link to="/admin/users" className="nav-item" style={{fontWeight: 600}}>
+                                    Users
+                                </Link>
+                            )}
+
+                            {/* Посилання на бронювання (ТІЛЬКИ КЛІЄНТ) */}
                             {user.role === 'ROLE_CLIENT' && (
                                 <Link to="/my-bookings" className="nav-item" style={{fontWeight: 600}}>
                                     My Bookings
                                 </Link>
                             )}
 
+                            {/* Іконка та Email поточного користувача */}
                             <Link to="/profile" className="nav-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span style={{ fontSize: '1.2rem' }}>👤</span>
                                 <span>{user.email}</span>
                             </Link>
 
+                            {/* Кнопка Logout */}
                             <button onClick={handleLogout} className="nav-logout">
                                 Logout
                             </button>
                         </>
                     ) : (
-                        // ... (якщо гість)
+                        // --- Якщо користувач не залогінений ---
                         <>
                             <Link to="/login" className="nav-item">Login</Link>
                             <Link to="/register" className="nav-item nav-btn">Register</Link>

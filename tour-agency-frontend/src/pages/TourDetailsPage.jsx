@@ -175,6 +175,10 @@ const TourDetailsPage = () => {
                             <span className="meta-value">📍 {tour.countryName || 'Unknown'}</span>
                         </div>
                         <div className="meta-item">
+                            <span className="meta-label">Region</span>
+                            <span className="meta-value">📍 {tour.countryRegion || 'Unknown'}</span>
+                        </div>
+                        <div className="meta-item">
                             <span className="meta-label">Dates</span>
                             <span className="meta-value">📅 {tour.startDate} — {tour.endDate}</span>
                         </div>

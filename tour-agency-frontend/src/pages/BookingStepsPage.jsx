@@ -306,7 +306,7 @@ const BookingStepsPage = () => {
                             <div className="form-group">
                                 <label>CVV</label>
                                 <input
-                                    type="text"
+                                    type="password"
                                     name="cvv"
                                     value={paymentData.cvv}
                                     onChange={handlePaymentChange}

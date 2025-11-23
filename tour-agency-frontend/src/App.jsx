@@ -11,6 +11,7 @@ import DashboardPage from './pages/DashboardPage';
 import TourFormPage from './pages/TourFormPage.jsx';
 import MyBookingsPage from './pages/MyBookingsPage.jsx';
 import BookingStepsPage from './pages/BookingStepsPage.jsx';
+import UserManagementPage from './pages/UserManagementPage.jsx';
 import './App.css';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
                         <Route path="/tour/edit/:id" element={<TourFormPage />} />
                         <Route path="/my-bookings" element={<MyBookingsPage />} />
                         <Route path="/book/:tourId" element={<BookingStepsPage />} />
+                        <Route path="/admin/users" element={<UserManagementPage />} />
                     </Routes>
                 </main>
             </Router>
